@@ -1,0 +1,31 @@
+name: mohammed_ali_student_system
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432
+      - DJANGO_SECRET_KEY=django-insecure-%r7i8)kze93clx8+#9$47rz*q*$e1f7sgfu5lxujtrx8x#_0h+
+      - DEBUG=False
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 src.wsgi:application"
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
