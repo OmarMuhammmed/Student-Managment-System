@@ -1,0 +1,2 @@
+admin : root
+password : root 
