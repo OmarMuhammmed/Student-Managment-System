@@ -10,12 +10,16 @@ class Grade(models.Model):
         ('grade5','الصف الثاني الثانوي'),     
         ('grade6','الصف الثالث الثانوي'),
     ]
-    name = models.CharField(max_length=100, choices=GRAD_NAMES)
+    grade = models.CharField(
+        max_length=10,           
+        choices=GRAD_NAMES,
+    )
+
     monthly_fee = models.DecimalField(max_digits=10, decimal_places=2)
-    slug = models.SlugField(unique=True)
+   
 
     def __str__(self):
-        return self.name
+        return self.grade
 
 class Student(models.Model):
     full_name = models.CharField(max_length=100)
