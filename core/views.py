@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Sum, Q
@@ -93,9 +94,13 @@ def grade_selection(request):
 
 
 def students_list(request):
-    """Students list view with payment tracking - requires grade selection"""
+    """Students list view with payment tracking and business filters"""
     # Get filter parameters
     selected_grades = request.GET.getlist('grades', [])
+    payment_status = request.GET.get('payment_status', 'all')  # all, paid, unpaid, partial
+    month_filter = request.GET.get('month', 'all')  # specific month or all
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort', 'name')  # name, grade, payments
     
     # Require grade selection - redirect if no grades selected
     if not selected_grades or (len(selected_grades) == 1 and selected_grades[0] == ''):
@@ -108,6 +113,13 @@ def students_list(request):
     students_qs = Student.objects.select_related('grade').prefetch_related('payments')
     if selected_grades and 'all' not in selected_grades:
         students_qs = students_qs.filter(grade__grade__in=selected_grades)
+    
+    # Apply search filter
+    if search_query:
+        students_qs = students_qs.filter(
+            Q(full_name__icontains=search_query) | 
+            Q(father_phone_number__icontains=search_query)
+        )
     
     # Check if any students exist for selected grades
     if not students_qs.exists():
@@ -124,13 +136,12 @@ def students_list(request):
     
     # Initialize totals
     total_paid_amount = 0
-    total_pending_amount = 0
     
     for student in students_qs:
         # Get payment status for each month
         payments = {}
         student_paid = 0
-        student_pending = 0
+        paid_months = 0
         
         for month in months:
             payment = student.payments.filter(month=month, year=2025).first()
@@ -139,22 +150,57 @@ def students_list(request):
                 if payment.is_paid:
                     student_paid += float(payment.amount)
                     total_paid_amount += float(payment.amount)
-                else:
-                    student_pending += float(payment.amount)
-                    total_pending_amount += float(payment.amount)
+                    paid_months += 1
             else:
                 payments[month] = False
-                # Create pending payment record for calculation
-                amount = float(student.grade.monthly_fee)
-                student_pending += amount
-                total_pending_amount += amount
+        
+        # Calculate payment completion percentage
+        completion_percentage = (paid_months / len(months)) * 100 if months else 0
+        
+        # Determine payment status for filtering based on selected month
+        if month_filter != 'all' and month_filter in months:
+            # Month-specific payment status
+            student_payment_status = 'paid' if payments.get(month_filter, False) else 'unpaid'
+            
+            # Apply payment status filter for specific month
+            if payment_status != 'all':
+                if payment_status == 'paid' and not payments.get(month_filter, False):
+                    continue
+                elif payment_status == 'unpaid' and payments.get(month_filter, False):
+                    continue
+                elif payment_status == 'partial':
+                    # For month-specific filtering, partial doesn't make sense, treat as unpaid
+                    if payments.get(month_filter, False):
+                        continue
+        else:
+            # Year-wide payment status (when no specific month is selected)
+            student_payment_status = 'unpaid'
+            if paid_months == len(months):
+                student_payment_status = 'paid'
+            elif paid_months > 0:
+                student_payment_status = 'partial'
+            
+            # Apply payment status filter for entire year
+            if payment_status != 'all':
+                if payment_status != student_payment_status:
+                    continue
         
         students_data.append({
             'student': student,
             'payments': payments,
             'total_paid': student_paid,
-            'pending_amount': student_pending,
+            'completion_percentage': completion_percentage,
+            'payment_status': student_payment_status,
+            'paid_months': paid_months,
         })
+    
+    # Apply sorting
+    if sort_by == 'name':
+        students_data.sort(key=lambda x: x['student'].full_name)
+    elif sort_by == 'grade':
+        students_data.sort(key=lambda x: x['student'].grade.grade)
+    elif sort_by == 'payments':
+        students_data.sort(key=lambda x: x['total_paid'], reverse=True)
     
     # All grades for filter
     all_grades = Grade.objects.all()
@@ -168,14 +214,26 @@ def students_list(request):
             if grade.grade in selected_grades:
                 selected_grade_names.append(grade.grade_name)
     
+    # Month names for display
+    month_names = {
+        'august': 'أغسطس', 'september': 'سبتمبر', 'october': 'أكتوبر',
+        'november': 'نوفمبر', 'december': 'ديسمبر', 'january': 'يناير',
+        'february': 'فبراير', 'march': 'مارس', 'april': 'أبريل',
+        'may': 'مايو', 'june': 'يونيو'
+    }
+    
     context = {
         'students_data': students_data,
         'months': months,
+        'month_names': month_names,
         'all_grades': all_grades,
         'selected_grades': selected_grades,
         'selected_grade_names': selected_grade_names,
         'total_paid_amount': total_paid_amount,
-        'total_pending_amount': total_pending_amount,
+        'payment_status': payment_status,
+        'month_filter': month_filter,
+        'search_query': search_query,
+        'sort_by': sort_by,
     }
     
     return render(request, 'core/students_list.html', context)
@@ -360,9 +418,9 @@ def add_student(request):
                     amount=student.grade.monthly_fee,
                     is_paid=False
                 )
-            
             messages.success(request, f'تم إضافة الطالب {student.full_name} بنجاح')
-            return redirect('core:students_list')
+            # Redirect to students list with the student's grade pre-selected
+            return redirect(f"{reverse('core:students_list')}?grades={student.grade.grade}")
         else:
             messages.error(request, 'يرجى تصحيح الأخطاء في النموذج')
     else:
@@ -383,7 +441,8 @@ def update_student(request, student_id):
         if form.is_valid():
             form.save()
             messages.success(request, f'تم تحديث بيانات الطالب {student.full_name} بنجاح')
-            return redirect('core:students_list')
+            # Redirect to students list with the student's grade pre-selected
+            return redirect(f"{reverse('core:students_list')}?grades={student.grade.grade}")
         else:
             messages.error(request, 'يرجى تصحيح الأخطاء في النموذج')
     else:
@@ -402,11 +461,60 @@ def delete_student(request, student_id):
     
     if request.method == 'POST':
         student_name = student.full_name
+        student_grade = student.grade.grade  # Store grade before deletion
         student.delete()  # Payments will be deleted automatically due to CASCADE
         messages.success(request, f'تم حذف الطالب {student_name} بنجاح')
-        return redirect('core:students_list')
+        # Redirect to students list with the deleted student's grade pre-selected
+        return redirect(f"{reverse('core:students_list')}?grades={student_grade}")
     
     return render(request, 'core/delete_student.html', {
         'student': student,
         'title': f'حذف الطالب: {student.full_name}'
     })
+
+
+def export_students_csv(request):
+    """Export students data to CSV"""
+    selected_grades = request.GET.getlist('grades', [])
+    
+    # Base queryset
+    students_qs = Student.objects.select_related('grade').prefetch_related('payments')
+    if selected_grades and 'all' not in selected_grades:
+        students_qs = students_qs.filter(grade__grade__in=selected_grades)
+    
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="students_data.csv"'
+    
+    # Add BOM for proper Arabic display in Excel
+    response.write('\ufeff')
+    
+    writer = csv.writer(response)
+    
+    # Headers
+    headers = ['الاسم', 'الصف', 'الهاتف', 'إجمالي المدفوعات']
+    months = ['أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر', 
+              'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو']
+    headers.extend(months)
+    writer.writerow(headers)
+    
+    # Data rows
+    month_keys = ['august', 'september', 'october', 'november', 'december', 
+                  'january', 'february', 'march', 'april', 'may', 'june']
+    
+    for student in students_qs:
+        row = [
+            student.full_name,
+            student.grade.grade_name,
+            student.father_phone_number,
+            student.total_payments
+        ]
+        
+        # Add payment status for each month
+        for month_key in month_keys:
+            payment = student.payments.filter(month=month_key, year=2025).first()
+            status = 'مدفوع' if payment and payment.is_paid else 'غير مدفوع'
+            row.append(status)
+        
+        writer.writerow(row)
+    
+    return response

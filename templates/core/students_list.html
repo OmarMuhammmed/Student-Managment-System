@@ -72,6 +72,111 @@
       </div>
     </div>
 
+    <!-- Business Filters -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+      <form method="GET" class="space-y-4">
+        <!-- Preserve grade selection -->
+        {% for grade in selected_grades %}
+        <input type="hidden" name="grades" value="{{ grade }}">
+        {% endfor %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Search -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
+            <input type="text" name="search" value="{{ search_query }}" 
+                   placeholder="اسم الطالب أو رقم الهاتف"
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+          </div>
+          
+          <!-- Payment Status -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">حالة الدفع</label>
+            <select name="payment_status" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+              <option value="all" {% if payment_status == 'all' %}selected{% endif %}>جميع الطلاب</option>
+              <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>مكتملي الدفع</option>
+              <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>دفع جزئي</option>
+              <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>لم يدفعوا</option>
+            </select>
+          </div>
+          
+          <!-- Month Filter -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">شهر محدد</label>
+            <select name="month" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+              <option value="all" {% if month_filter == 'all' %}selected{% endif %}>جميع الأشهر</option>
+              {% for month_key, month_name in month_names.items %}
+              <option value="{{ month_key }}" {% if month_filter == month_key %}selected{% endif %}>{{ month_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Sort -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">ترتيب حسب</label>
+            <select name="sort" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+              <option value="name" {% if sort_by == 'name' %}selected{% endif %}>الاسم</option>
+              <option value="grade" {% if sort_by == 'grade' %}selected{% endif %}>الصف</option>
+              <option value="payments" {% if sort_by == 'payments' %}selected{% endif %}>المدفوعات</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="flex justify-between items-center">
+          <div class="flex space-x-2 space-x-reverse">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
+              تطبيق الفلاتر
+            </button>
+            <a href="?{% for grade in selected_grades %}grades={{ grade }}&{% endfor %}" 
+               class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 text-sm">
+              إعادة تعيين
+            </a>
+          </div>
+          
+          <!-- Active Filters Summary -->
+          <div class="text-sm text-gray-600">
+            {% if search_query or payment_status != 'all' or month_filter != 'all' or sort_by != 'name' %}
+              <span class="font-medium">الفلاتر النشطة:</span>
+              {% if search_query %}
+                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1">بحث: {{ search_query }}</span>
+              {% endif %}
+              {% if payment_status != 'all' %}
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs mr-1">
+                  {% if payment_status == 'paid' %}مكتملي الدفع
+                  {% elif payment_status == 'partial' %}دفع جزئي
+                  {% elif payment_status == 'unpaid' %}لم يدفعوا
+                  {% endif %}
+                </span>
+              {% endif %}
+              {% if month_filter != 'all' %}
+                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mr-1">
+                  {% if month_filter == 'august' %}أغسطس
+                  {% elif month_filter == 'september' %}سبتمبر
+                  {% elif month_filter == 'october' %}أكتوبر
+                  {% elif month_filter == 'november' %}نوفمبر
+                  {% elif month_filter == 'december' %}ديسمبر
+                  {% elif month_filter == 'january' %}يناير
+                  {% elif month_filter == 'february' %}فبراير
+                  {% elif month_filter == 'march' %}مارس
+                  {% elif month_filter == 'april' %}أبريل
+                  {% elif month_filter == 'may' %}مايو
+                  {% elif month_filter == 'june' %}يونيو
+                  {% endif %}
+                </span>
+              {% endif %}
+              {% if sort_by != 'name' %}
+                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs mr-1">
+                  ترتيب: {% if sort_by == 'grade' %}الصف{% elif sort_by == 'payments' %}المدفوعات{% endif %}
+                </span>
+              {% endif %}
+            {% else %}
+              <span class="text-gray-500">لا توجد فلاتر نشطة</span>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+
     <!-- Quick Stats for Selected Grades -->
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
       <div class="flex items-center justify-between">
@@ -231,10 +336,12 @@
                   <div class="text-sm text-gray-500">
                     {{ data.student.grade.grade_name }}
                   </div>
-                  <div class="text-xs text-gray-400">
-                    <span id="student-total-{{ data.student.id }}"
-                      >{{ data.total_paid|floatformat:0 }} جنيه مدفوع</span
-                    >
+                  <div class="text-xs text-gray-400 space-y-1">
+                    <div>
+                      <span id="student-total-{{ data.student.id }}"
+                        >{{ data.total_paid|floatformat:0 }} جنيه مدفوع</span>
+                    </div>
+                   
                   </div>
                 </div>
               </div>
@@ -716,6 +823,51 @@
       }
     `;
     document.head.appendChild(style);
+  });
+
+  // Dynamic filter behavior for month-specific payment status
+  document.addEventListener('DOMContentLoaded', function() {
+    const monthSelect = document.querySelector('select[name="month"]');
+    const paymentStatusSelect = document.querySelector('select[name="payment_status"]');
+    const paymentStatusLabel = paymentStatusSelect.previousElementSibling;
+    
+    function updatePaymentStatusLabel() {
+        const selectedMonth = monthSelect.value;
+        const monthNames = {
+            'august': 'أغسطس', 'september': 'سبتمبر', 'october': 'أكتوبر',
+            'november': 'نوفمبر', 'december': 'ديسمبر', 'january': 'يناير',
+            'february': 'فبراير', 'march': 'مارس', 'april': 'أبريل',
+            'may': 'مايو', 'june': 'يونيو'
+        };
+        
+        const currentValue = paymentStatusSelect.value;
+        
+        if (selectedMonth === 'all') {
+            paymentStatusLabel.textContent = 'حالة الدفع (السنة كاملة)';
+            // Update options for year-wide status
+            paymentStatusSelect.innerHTML = `
+                <option value="all" ${currentValue === 'all' ? 'selected' : ''}>جميع الطلاب</option>
+                <option value="paid" ${currentValue === 'paid' ? 'selected' : ''}>مكتملي الدفع</option>
+                <option value="partial" ${currentValue === 'partial' ? 'selected' : ''}>دفع جزئي</option>
+                <option value="unpaid" ${currentValue === 'unpaid' ? 'selected' : ''}>لم يدفعوا</option>
+            `;
+        } else {
+            const monthName = monthNames[selectedMonth] || selectedMonth;
+            paymentStatusLabel.textContent = `حالة الدفع (${monthName})`;
+            // Update options for month-specific status
+            paymentStatusSelect.innerHTML = `
+                <option value="all" ${currentValue === 'all' ? 'selected' : ''}>جميع الطلاب</option>
+                <option value="paid" ${currentValue === 'paid' ? 'selected' : ''}>دفعوا ${monthName}</option>
+                <option value="unpaid" ${currentValue === 'unpaid' ? 'selected' : ''}>لم يدفعوا ${monthName}</option>
+            `;
+        }
+    }
+    
+    // Update label on page load
+    updatePaymentStatusLabel();
+    
+    // Update label when month selection changes
+    monthSelect.addEventListener('change', updatePaymentStatusLabel);
   });
 </script>
 {% endblock %}

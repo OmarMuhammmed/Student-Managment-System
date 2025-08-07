@@ -1,10 +1,6 @@
-{% extends 'base.html' %} 
-{% load static %} 
-{% load core_extras %} 
-    {% block title %}
-    {{ student.full_name }} - {{ block.super }}
-    {% endblock %} 
-{% block content %}
+{% extends 'base.html' %} {% load static %} {% load core_extras %} {% block
+title %} {{ student.full_name }} - {{ block.super }} {% endblock %} {% block
+content %}
 <div class="p-8">
   <div class="flex justify-between items-center mb-8">
     <h2 class="text-3xl font-bold text-gray-800">تفاصيل الطالب</h2>
@@ -45,18 +41,10 @@
             <span class="text-gray-900">{{ student.grade.grade_name }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="font-medium text-gray-600">العمر:</span>
-            <span class="text-gray-900">{{ student.age }} سنة</span>
-          </div>
-          <div class="flex justify-between">
             <span class="font-medium text-gray-600">الهاتف:</span>
             <span class="text-gray-900 ltr"
               >{{ student.father_phone_number }}</span
             >
-          </div>
-          <div class="flex justify-between">
-            <span class="font-medium text-gray-600">العنوان:</span>
-            <span class="text-gray-900">{{ student.address }}</span>
           </div>
         </div>
       </div>
@@ -113,7 +101,8 @@
         <div class="flex flex-col">
           <span class="font-medium">{{ payment.get_month_display }}</span>
           <span class="text-sm text-gray-500">
-            {% if payment.is_paid %}{{ payment.amount|floatformat:0 }} جنيه {%else %} 0 جنيه {% endif %}
+            {% if payment.is_paid %}{{ payment.amount|floatformat:0 }} جنيه
+            {%else %} 0 جنيه {% endif %}
           </span>
         </div>
         <span
@@ -132,9 +121,7 @@
       const student = {
           name: '{{ student.full_name }}',
           grade: '{{ student.grade.grade_name }}',
-          age: '{{ student.age }}',
           phone: '{{ student.father_phone_number }}',
-          address: '{{ student.address }}',
           totalPaid: '{{ total_paid|floatformat:0 }}',
           totalPending: '{{ total_pending|floatformat:0 }}'
       };
@@ -165,9 +152,7 @@
               <div class="info">
                   <h3>المعلومات الشخصية:</h3>
                   <p><strong>الصف:</strong> ${student.grade}</p>
-                  <p><strong>العمر:</strong> ${student.age} سنة</p>
                   <p><strong>الهاتف:</strong> ${student.phone}</p>
-                  <p><strong>العنوان:</strong> ${student.address}</p>
               </div>
               <div class="payments">
                   <h3>ملخص المدفوعات:</h3>

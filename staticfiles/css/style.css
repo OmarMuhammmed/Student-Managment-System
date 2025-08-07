@@ -1,0 +1,415 @@
+/* Custom CSS Styles for Student Management System */
+
+/* RTL and LTR Direction Classes */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* Payment Grid Layout */
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.payment-month {
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+}
+
+/* Custom Scrollbar for Modal */
+#student-modal .max-h-screen::-webkit-scrollbar {
+  width: 8px;
+}
+
+#student-modal .max-h-screen::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+#student-modal .max-h-screen::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+#student-modal .max-h-screen::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Table Responsive Design */
+@media (max-width: 1024px) {
+  .overflow-x-auto {
+    font-size: 0.875rem;
+  }
+
+  .payment-month {
+    font-size: 0.625rem;
+    padding: 0.125rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.25rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-month {
+    font-size: 0.5rem;
+  }
+
+  .w-64 {
+    width: 100%;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .w-64.open {
+    transform: translateX(0);
+  }
+}
+
+/* Animation for Stats Cards */
+.stats-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Payment Status Colors */
+.payment-paid {
+  background-color: #dcfce7;
+  border-color: #16a34a;
+}
+
+.payment-unpaid {
+  background-color: #fee2e2;
+  border-color: #dc2626;
+}
+
+/* Navigation Button Active State */
+.nav-btn.active {
+  background-color: #dbeafe;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.nav-btn:not(.active):hover {
+  background-color: #f9fafb;
+}
+
+/* Modal Animation */
+#student-modal {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#student-modal > div > div {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Student Row Hover Effect */
+.student-row {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.student-row:hover {
+  background-color: #f8fafc;
+}
+
+/* Grade Filter Checkboxes */
+.grade-filter {
+  border-radius: 0.25rem;
+  border: 2px solid #d1d5db;
+  transition: all 0.2s ease-in-out;
+}
+
+.grade-filter:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.grade-filter:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Revenue Cards */
+.revenue-card {
+  border-left: 4px solid;
+  transition: all 0.2s ease-in-out;
+}
+
+.revenue-card.grade7 {
+  border-left-color: #3b82f6;
+}
+
+.revenue-card.grade8 {
+  border-left-color: #10b981;
+}
+
+.revenue-card.grade9 {
+  border-left-color: #f59e0b;
+}
+
+.revenue-card.grade10 {
+  border-left-color: #ef4444;
+}
+
+.revenue-card.grade11 {
+  border-left-color: #8b5cf6;
+}
+
+.revenue-card.grade12 {
+  border-left-color: #06b6d4;
+}
+
+/* Loading Animation */
+.loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Print Styles */
+@media print {
+  #sidebar {
+    display: none;
+  }
+
+  .page-content {
+    padding: 1rem !important;
+  }
+
+  .bg-gray-50 {
+    background-color: white !important;
+  }
+
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  button {
+    display: none !important;
+  }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+
+  .dark-mode .bg-white {
+    background-color: #374151;
+    color: #f9fafb;
+  }
+
+  .dark-mode .text-gray-800 {
+    color: #f9fafb;
+  }
+
+  .dark-mode .text-gray-600 {
+    color: #d1d5db;
+  }
+
+  .dark-mode .border-gray-200 {
+    border-color: #4b5563;
+  }
+}
+
+/* Enhanced Payment System Styles */
+.payment-cell {
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.payment-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.payment-cell.bg-green-100 {
+  background-color: #dcfce7 !important;
+  border-color: #16a34a !important;
+}
+
+.payment-cell.bg-red-100 {
+  background-color: #fee2e2 !important;
+  border-color: #dc2626 !important;
+}
+
+/* Student Row Enhancements */
+.student-row:hover {
+  background-color: #f8fafc !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.student-row:hover .payment-cell {
+  border-width: 2px;
+}
+
+/* Checkbox Enhancements */
+.payment-cell input[type="checkbox"] {
+  transform: scale(1.2);
+  transition: all 0.2s ease;
+}
+
+.payment-cell input[type="checkbox"]:hover {
+  transform: scale(1.3);
+}
+
+.payment-cell input[type="checkbox"]:checked {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+
+/* Animation Classes */
+.payment-success {
+  animation: paymentSuccess 0.6s ease-in-out;
+}
+
+.payment-removed {
+  animation: paymentRemoved 0.6s ease-in-out;
+}
+
+@keyframes paymentSuccess {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    background-color: #22c55e;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes paymentRemoved {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+    background-color: #ef4444;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Stats Card Animations */
+.stats-card {
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Number Animation */
+.number-update {
+  animation: numberPulse 0.5s ease-in-out;
+}
+
+@keyframes numberPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    color: #16a34a;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Success Indicator */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* Loading State */
+.payment-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.payment-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -10,50 +10,38 @@
   <h2 class="text-3xl font-bold text-gray-800 mb-8">لوحة التحكم</h2>
 
   <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-blue-100 text-blue-600">👥</div>
-        <div class="mr-4">
-          <p class="text-sm font-medium text-gray-600">إجمالي الطلاب</p>
-          <p class="text-2xl font-bold text-gray-900">{{ total_students }}</p>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">👥</div>
+                <div class="mr-4">
+                    <p class="text-sm font-medium text-gray-600">إجمالي الطلاب</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_students }}</p>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">💰</div>
+                <div class="mr-4">
+                    <p class="text-sm font-medium text-gray-600">إجمالي المدفوعات</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_paid|floatformat:0 }} جنيه</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-600">📚</div>
+                <div class="mr-4">
+                    <p class="text-sm font-medium text-gray-600">عدد الصفوف</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_grades }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-green-100 text-green-600">💰</div>
-        <div class="mr-4">
-          <p class="text-sm font-medium text-gray-600">إجمالي المدفوعات</p>
-          <p class="text-2xl font-bold text-gray-900">
-            {{ total_paid|floatformat:0 }} جنيه
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">⏰</div>
-        <div class="mr-4">
-          <p class="text-sm font-medium text-gray-600">مدفوعات معلقة</p>
-          <p class="text-2xl font-bold text-gray-900">
-            {{ total_pending|floatformat:0 }} جنيه
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-purple-100 text-purple-600">📚</div>
-        <div class="mr-4">
-          <p class="text-sm font-medium text-gray-600">عدد الصفوف</p>
-          <p class="text-2xl font-bold text-gray-900">{{ total_grades }}</p>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Students per Grade -->

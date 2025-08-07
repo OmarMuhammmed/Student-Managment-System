@@ -61,6 +61,13 @@ class Student(models.Model):
     @property
     def payment_completion_percentage(self):
         """Calculate payment completion percentage"""
+        total_months = 11  # August to June
+        paid_months = self.payments.filter(is_paid=True, year=2025).count()
+        return (paid_months / total_months) * 100 if total_months > 0 else 0
+    
+    @property
+    def payment_completion_percentage(self):
+        """Calculate payment completion percentage"""
         total_payments = self.payments.count()
         paid_payments = self.payments.filter(is_paid=True).count()
         if total_payments == 0:

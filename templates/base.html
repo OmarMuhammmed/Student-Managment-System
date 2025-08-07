@@ -35,40 +35,7 @@
           </nav>
 
           <!-- Grade Filter -->
-          <div class="mt-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-              فلترة حسب الصف
-            </h3>
-            <form method="GET" id="grade-filter-form">
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input type="checkbox" class="grade-filter ml-2" name="grades"
-                  value="all" {% if not selected_grades or 'all' in selected_grades %}checked{% endif %}
-                  onchange="toggleGradeFilter(this)">
-                  <span class="text-gray-700">جميع الصفوف</span>
-                </label>
-                {% for grade in all_grades %}
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    class="grade-filter ml-2"
-                    name="grades"
-                    value="{{ grade.grade }}"
-                    {%
-                    if
-                    grade.grade
-                    in
-                    selected_grades
-                    %}checked{%
-                    endif
-                    %}
-                    onchange="toggleGradeFilter(this)" />
-                  <span class="text-gray-700">{{ grade.grade_name }}</span>
-                </label>
-                {% endfor %}
-              </div>
-            </form>
-          </div>
+         
         </div>
       </div>
 
