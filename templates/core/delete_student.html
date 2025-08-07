@@ -1,0 +1,132 @@
+{% extends 'base.html' %} {% load static %} {% block title %}{{ title }} - {{
+block.super }}{% endblock %} {% block content %}
+<div class="p-8">
+  <div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-3xl font-bold text-red-600">{{ title }}</h2>
+        <a
+          href="{% url 'core:students_list' %}"
+          class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+          <svg
+            class="w-4 h-4 inline-block ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          العودة للقائمة
+        </a>
+      </div>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Warning Icon -->
+      <div
+        class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full">
+        <svg
+          class="w-8 h-8 text-red-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+      </div>
+
+      <!-- Student Info -->
+      <div class="text-center mb-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">تأكيد حذف الطالب</h3>
+        <p class="text-gray-600 mb-4">هل أنت متأكد من حذف الطالب التالي؟</p>
+
+        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+          <div class="flex items-center justify-center mb-3">
+            <div
+              class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+              {{ student.full_name|first }}
+            </div>
+          </div>
+          <div class="space-y-2 text-sm">
+            <div><strong>الاسم:</strong> {{ student.full_name }}</div>
+            <div><strong>الصف:</strong> {{ student.grade.grade_name }}</div>
+            <div>
+              <strong>الهاتف:</strong> {{ student.father_phone_number }}
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="mr-3">
+              <h3 class="text-sm font-medium text-red-800">تحذير مهم!</h3>
+              <div class="mt-2 text-sm text-red-700">
+                <p>
+                  سيتم حذف جميع بيانات الدفع المرتبطة بهذا الطالب نهائياً. هذا
+                  الإجراء لا يمكن التراجع عنه.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <form method="post" class="flex justify-center space-x-4 space-x-reverse">
+        {% csrf_token %}
+        <a
+          href="{% url 'core:students_list' %}"
+          class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">
+          <svg
+            class="w-4 h-4 inline-block ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          إلغاء
+        </a>
+        <button
+          type="submit"
+          class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+          <svg
+            class="w-4 h-4 inline-block ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          تأكيد الحذف
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

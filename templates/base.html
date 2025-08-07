@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}الاستاذ محمد علي | نظام إدارة الطلاب{% endblock %}
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body class="bg-gray-50 rtl">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <div id="sidebar" class="w-64 bg-white shadow-lg">
+        <div class="p-6">
+          <h1 class="text-2xl font-bold text-gray-800 mb-8">
+            نظام إدارة الطلاب
+          </h1>
+
+          <!-- Navigation -->
+          <nav class="space-y-2">
+            <a
+              href="{% url 'core:dashboard' %}"
+              class="nav-btn block w-full text-right p-3 rounded-lg {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 text-blue-600 font-medium{% else %}hover:bg-gray-50 text-gray-700{% endif %}">
+              📊 الرئيسية
+            </a>
+            <a
+              href="{% url 'core:grade_selection' %}"
+              class="nav-btn block w-full text-right p-3 rounded-lg {% if request.resolver_match.url_name == 'students_list' or request.resolver_match.url_name == 'grade_selection' %}bg-blue-50 text-blue-600 font-medium{% else %}hover:bg-gray-50 text-gray-700{% endif %}">
+              👥 قائمة الطلاب
+            </a>
+          </nav>
+
+          <!-- Grade Filter -->
+          <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              فلترة حسب الصف
+            </h3>
+            <form method="GET" id="grade-filter-form">
+              <div class="space-y-2">
+                <label class="flex items-center">
+                  <input type="checkbox" class="grade-filter ml-2" name="grades"
+                  value="all" {% if not selected_grades or 'all' in selected_grades %}checked{% endif %}
+                  onchange="toggleGradeFilter(this)">
+                  <span class="text-gray-700">جميع الصفوف</span>
+                </label>
+                {% for grade in all_grades %}
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    class="grade-filter ml-2"
+                    name="grades"
+                    value="{{ grade.grade }}"
+                    {%
+                    if
+                    grade.grade
+                    in
+                    selected_grades
+                    %}checked{%
+                    endif
+                    %}
+                    onchange="toggleGradeFilter(this)" />
+                  <span class="text-gray-700">{{ grade.grade_name }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-1">{% block content %}{% endblock %}</div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+      function toggleGradeFilter(checkbox) {
+        const form = document.getElementById("grade-filter-form");
+        const allCheckbox = form.querySelector('input[value="all"]');
+        const otherCheckboxes = form.querySelectorAll('input[value!="all"]');
+
+        if (checkbox.value === "all") {
+          if (checkbox.checked) {
+            otherCheckboxes.forEach((cb) => (cb.checked = false));
+          }
+        } else {
+          if (checkbox.checked) {
+            allCheckbox.checked = false;
+          }
+        }
+
+        // Submit form to apply filter
+        form.submit();
+      }
+    </script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

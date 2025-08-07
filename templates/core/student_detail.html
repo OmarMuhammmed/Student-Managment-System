@@ -1,0 +1,188 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load core_extras %} 
+    {% block title %}
+    {{ student.full_name }} - {{ block.super }}
+    {% endblock %} 
+{% block content %}
+<div class="p-8">
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-bold text-gray-800">تفاصيل الطالب</h2>
+    <div class="flex space-x-2 space-x-reverse">
+      <button
+        onclick="printStudentDetails()"
+        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+        طباعة التفاصيل
+      </button>
+      <a
+        href="{% url 'core:students_list' %}"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        العودة للقائمة
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Personal Information -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h4 class="text-lg font-semibold text-gray-800 mb-4">
+        المعلومات الشخصية
+      </h4>
+      <div class="space-y-4">
+        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+          <div
+            class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-3">
+            {{ student.full_name|first }}
+          </div>
+          <div>
+            <div class="font-medium text-gray-900">{{ student.full_name }}</div>
+            <div class="text-sm text-gray-500">الطالب</div>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="font-medium text-gray-600">الصف:</span>
+            <span class="text-gray-900">{{ student.grade.grade_name }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="font-medium text-gray-600">العمر:</span>
+            <span class="text-gray-900">{{ student.age }} سنة</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="font-medium text-gray-600">الهاتف:</span>
+            <span class="text-gray-900 ltr"
+              >{{ student.father_phone_number }}</span
+            >
+          </div>
+          <div class="flex justify-between">
+            <span class="font-medium text-gray-600">العنوان:</span>
+            <span class="text-gray-900">{{ student.address }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h4 class="text-lg font-semibold text-gray-800 mb-4">ملخص المدفوعات</h4>
+      <div class="space-y-4">
+        <!-- Progress Bar -->
+        <div class="bg-gray-200 rounded-full h-3 mb-4">
+          <div
+            class="bg-blue-600 h-3 rounded-full transition-all duration-500"
+            style="width: {{ completion_percentage }}%"></div>
+        </div>
+        <div class="text-center text-sm text-gray-600 mb-4">
+          {{ completion_percentage }}% مكتمل
+        </div>
+
+        <div class="grid grid-cols-1 gap-3">
+          <div class="bg-green-50 p-4 rounded-lg border-r-4 border-green-500">
+            <div class="text-green-800 font-medium">المبلغ المدفوع</div>
+            <div class="text-2xl font-bold text-green-600">
+              {{ total_paid|floatformat:0 }} جنيه
+            </div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg border-r-4 border-red-500">
+            <div class="text-red-800 font-medium">المبلغ المعلق</div>
+            <div class="text-2xl font-bold text-red-600">
+              {{ total_pending|floatformat:0 }} جنيه
+            </div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg border-r-4 border-blue-500">
+            <div class="text-blue-800 font-medium">إجمالي المطلوب</div>
+            <div class="text-2xl font-bold text-blue-600">
+              {{ student.grade.monthly_fee|mul:11|floatformat:0 }} جنيه
+            </div>
+            <div class="text-sm text-blue-600">للعام الدراسي</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment History -->
+  <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+      تاريخ المدفوعات الشهرية
+    </h4>
+    <div class="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
+      {% for payment in payments %}
+      <div
+        class="flex justify-between items-center py-3 border-b border-gray-200">
+        <div class="flex flex-col">
+          <span class="font-medium">{{ payment.get_month_display }}</span>
+          <span class="text-sm text-gray-500">
+            {% if payment.is_paid %}{{ payment.amount|floatformat:0 }} جنيه {%else %} 0 جنيه {% endif %}
+          </span>
+        </div>
+        <span
+          class="px-3 py-1 rounded-full text-sm font-medium {% if payment.is_paid %}text-green-600 bg-green-100{% else %}text-red-600 bg-red-100{% endif %}">
+          {% if payment.is_paid %}مدفوع{% else %}غير مدفوع{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function printStudentDetails() {
+      const printWindow = window.open('', '_blank');
+      const student = {
+          name: '{{ student.full_name }}',
+          grade: '{{ student.grade.grade_name }}',
+          age: '{{ student.age }}',
+          phone: '{{ student.father_phone_number }}',
+          address: '{{ student.address }}',
+          totalPaid: '{{ total_paid|floatformat:0 }}',
+          totalPending: '{{ total_pending|floatformat:0 }}'
+      };
+
+      let paymentList = '';
+      {% for payment in payments %}
+      paymentList += '<li>{{ payment.get_month_display }}: {% if payment.is_paid %}✓ مدفوع{% else %}✗ غير مدفوع{% endif %}</li>';
+      {% endfor %}
+
+      printWindow.document.write(`
+          <html dir="rtl">
+          <head>
+              <title>تفاصيل الطالب - ${student.name}</title>
+              <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; }
+                  .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                  .info { margin: 20px 0; }
+                  .payments { margin: 20px 0; }
+                  ul { list-style-type: none; }
+                  li { padding: 5px 0; }
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <h1>تفاصيل الطالب</h1>
+                  <h2>${student.name}</h2>
+              </div>
+              <div class="info">
+                  <h3>المعلومات الشخصية:</h3>
+                  <p><strong>الصف:</strong> ${student.grade}</p>
+                  <p><strong>العمر:</strong> ${student.age} سنة</p>
+                  <p><strong>الهاتف:</strong> ${student.phone}</p>
+                  <p><strong>العنوان:</strong> ${student.address}</p>
+              </div>
+              <div class="payments">
+                  <h3>ملخص المدفوعات:</h3>
+                  <p><strong>المبلغ المدفوع:</strong> ${student.totalPaid} جنيه</p>
+                  <p><strong>المبلغ المعلق:</strong> ${student.totalPending} جنيه</p>
+                  <h3>تفاصيل المدفوعات الشهرية:</h3>
+                  <ul>${paymentList}</ul>
+              </div>
+          </body>
+          </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+  }
+</script>
+{% endblock %}

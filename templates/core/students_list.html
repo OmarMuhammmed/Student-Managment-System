@@ -1,0 +1,721 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load core_extras %} 
+{% block title %} قائمة الطلاب - {{ block.super }} 
+{% endblock %} 
+{% block content %}
+<div class="p-8">
+  <!-- Header with Grade Selection Info -->
+  <div class="mb-6">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">قائمة الطلاب</h2>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="text-sm text-gray-600">الصفوف المحددة:</span>
+          {% for grade_name in selected_grade_names %}
+          <span
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            {{ grade_name }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="flex space-x-2 space-x-reverse">
+        <a
+          href="{% url 'core:grade_selection' %}"
+          class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+          <svg
+            class="w-4 h-4 inline-block ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          تغيير الصف
+        </a>
+        <a
+          href="{% url 'core:export_students_csv' %}?{% for grade in selected_grades %}grades={{ grade }}&{% endfor %}"
+          class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+          <svg
+            class="w-4 h-4 inline-block ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          تصدير CSV
+        </a>
+        <a
+          href="{% url 'core:add_student' %}"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <svg
+            class="w-4 h-4 inline-block ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          إضافة طالب جديد
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick Stats for Selected Grades -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 space-x-reverse">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600">
+              {{ students_data|length }}
+            </div>
+            <div class="text-xs text-blue-600">طالب</div>
+          </div>
+          <div class="text-center">
+            <div
+              class="text-2xl font-bold text-green-600"
+              id="header-total-paid">
+              {{ total_paid_amount|floatformat:0 }}
+            </div>
+            <div class="text-xs text-green-600">جنيه مدفوع</div>
+          </div>
+          <div class="text-center">
+            <div
+              class="text-2xl font-bold text-purple-600"
+              id="header-completion-rate">
+              0%
+            </div>
+            <div class="text-xs text-purple-600">نسبة الإكمال</div>
+          </div>
+        </div>
+        <div class="text-sm text-blue-600">
+          آخر تحديث: <span id="last-update">الآن</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-100 text-green-600">💰</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">إجمالي المدفوعات</p>
+          <p class="text-2xl font-bold text-green-600" id="total-paid-amount">
+            0 جنيه
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-purple-100 text-purple-600">👥</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">إجمالي الطلاب</p>
+          <p
+            class="text-2xl font-bold text-purple-600"
+            id="total-students-count">
+            {{ students_data|length }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">📊</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">نسبة الإكمال</p>
+          <p
+            class="text-2xl font-bold text-blue-600"
+            id="completion-percentage">
+            0%
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students Table -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              الطالب
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              أغسطس
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              سبتمبر
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              أكتوبر
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              نوفمبر
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ديسمبر
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              يناير
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              فبراير
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              مارس
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              أبريل
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              مايو
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              يونيو
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              الإجراءات
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for data in students_data %}
+          <tr
+            class="student-row hover:bg-gray-50 transition-colors duration-200"
+            data-grade="{{ data.student.grade.grade }}"
+            data-student-id="{{ data.student.id }}"
+            id="student-row-{{ data.student.id }}">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10">
+                  <div
+                    class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                    {{ data.student.full_name|first }}
+                  </div>
+                </div>
+                <div class="mr-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ data.student.full_name }}
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    {{ data.student.grade.grade_name }}
+                  </div>
+                  <div class="text-xs text-gray-400">
+                    <span id="student-total-{{ data.student.id }}"
+                      >{{ data.total_paid|floatformat:0 }} جنيه مدفوع</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </td>
+            {% for month in months %}
+            <td
+              class="px-2 py-4 text-center payment-cell transition-colors duration-300 {% if data.payments|lookup:month %}bg-green-100 border-green-300{% else %}bg-red-100 border-red-300{% endif %}"
+              data-month="{{ month }}"
+              data-student-id="{{ data.student.id }}">
+              <input
+                type="checkbox"
+                {% if data.payments|lookup:month %} checked {% endif %}
+                onchange="updatePayment({{ data.student.id }}, '{{ month }}', this.checked, {{ data.student.grade.monthly_fee }})"
+                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
+                title="الدفع لشهر {{ month }}"
+                data-amount="{{ data.student.grade.monthly_fee }}" />
+              <div class="text-xs text-gray-500 mt-1">
+                {{ data.student.grade.monthly_fee|floatformat:0 }}
+              </div>
+            </td>
+            {% endfor %}
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+              <div class="flex justify-center space-x-1 space-x-reverse">
+                <a
+                  href="{% url 'core:student_detail' data.student.id %}"
+                  class="text-blue-600 hover:text-blue-900 bg-blue-50 px-2 py-1 rounded transition-colors text-xs"
+                  title="عرض التفاصيل">
+                  👁️
+                </a>
+                <a
+                  href="{% url 'core:update_student' data.student.id %}"
+                  class="text-green-600 hover:text-green-900 bg-green-50 px-2 py-1 rounded transition-colors text-xs"
+                  title="تعديل الطالب">
+                  ✏️
+                </a>
+                <a
+                  href="{% url 'core:delete_student' data.student.id %}"
+                  class="text-red-600 hover:text-red-900 bg-red-50 px-2 py-1 rounded transition-colors text-xs"
+                  title="حذف الطالب">
+                  🗑️
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="13" class="px-6 py-8 text-center text-gray-500">
+              لا توجد طلاب لعرضها
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  // Global variables to track totals
+  let totalPaidAmount = 0;
+  let totalPayments = 0;
+  let paidPayments = 0;
+
+  function updatePayment(studentId, month, isChecked, amount) {
+    const csrfToken = document.querySelector(
+      "[name=csrfmiddlewaretoken]"
+    ).value;
+
+    // Show loading state
+    const checkbox = event.target;
+    const cell = checkbox.closest("td");
+    checkbox.disabled = true;
+    cell.style.opacity = "0.6";
+
+    fetch('{% url "core:update_payment" %}', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      body: JSON.stringify({
+        student_id: studentId,
+        month: month,
+        is_paid: isChecked,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Update cell visual state with animation
+          updateCellVisuals(cell, isChecked);
+
+          // Update totals
+          updateTotals(isChecked, amount);
+
+          // Update student individual total
+          updateStudentTotal(studentId, isChecked, amount);
+
+          // Show success feedback
+          showSuccessAnimation(cell);
+        } else {
+          alert("حدث خطأ: " + data.message);
+          // Revert checkbox state
+          checkbox.checked = !isChecked;
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("حدث خطأ في الاتصال");
+        // Revert checkbox state
+        checkbox.checked = !isChecked;
+      })
+      .finally(() => {
+        // Remove loading state
+        checkbox.disabled = false;
+        cell.style.opacity = "1";
+      });
+  }
+
+  function updateCellVisuals(cell, isChecked) {
+    // Add transition classes
+    cell.style.transition = "all 0.3s ease";
+
+    if (isChecked) {
+      // Payment made - green background
+      cell.className = cell.className
+        .replace("bg-red-100", "bg-green-100")
+        .replace("border-red-300", "border-green-300");
+
+      // Add success animation
+      cell.style.transform = "scale(1.05)";
+      setTimeout(() => {
+        cell.style.transform = "scale(1)";
+      }, 200);
+    } else {
+      // Payment removed - red background
+      cell.className = cell.className
+        .replace("bg-green-100", "bg-red-100")
+        .replace("border-green-300", "border-red-300");
+
+      // Add removal animation
+      cell.style.transform = "scale(0.95)";
+      setTimeout(() => {
+        cell.style.transform = "scale(1)";
+      }, 200);
+    }
+  }
+
+  function updateTotals(isChecked, amount) {
+    const amountValue = parseFloat(amount);
+
+    if (isChecked) {
+      // Payment added
+      totalPaidAmount += amountValue;
+      paidPayments++;
+    } else {
+      // Payment removed
+      totalPaidAmount -= amountValue;
+      paidPayments--;
+    }
+
+    // Update display with animation
+    animateNumberChange(
+      "total-paid-amount",
+      totalPaidAmount.toLocaleString() + " جنيه"
+    );
+
+    // Update completion percentage
+    const completionPercentage =
+      totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0;
+    animateNumberChange("completion-percentage", completionPercentage + "%");
+    animateNumberChange("header-completion-rate", completionPercentage + "%");
+  }
+
+  function updateStudentTotal(studentId, isChecked, amount) {
+    const studentTotalElement = document.getElementById(
+      `student-total-${studentId}`
+    );
+    if (studentTotalElement) {
+      const currentText = studentTotalElement.textContent;
+      const currentAmount = parseFloat(currentText.replace(/[^\d]/g, "")) || 0;
+      const amountValue = parseFloat(amount);
+
+      let newAmount;
+      if (isChecked) {
+        newAmount = currentAmount + amountValue;
+      } else {
+        newAmount = Math.max(0, currentAmount - amountValue);
+      }
+
+      animateNumberChange(
+        `student-total-${studentId}`,
+        newAmount.toLocaleString() + " جنيه مدفوع"
+      );
+    }
+  }
+
+  function animateNumberChange(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      // Add animation class
+      element.style.transition = "all 0.3s ease";
+      element.style.transform = "scale(1.1)";
+      element.style.color = "#10b981"; // Green color
+
+      // Update value
+      setTimeout(() => {
+        element.textContent = newValue;
+        element.style.transform = "scale(1)";
+
+        // Reset color after animation
+        setTimeout(() => {
+          element.style.color = "";
+        }, 300);
+      }, 150);
+    }
+  }
+
+  function showSuccessAnimation(cell) {
+    // Create a temporary success indicator
+    const successIndicator = document.createElement("div");
+    successIndicator.innerHTML = "✓";
+    successIndicator.className =
+      "absolute top-0 right-0 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs";
+    successIndicator.style.animation = "fadeInOut 1s ease-in-out";
+
+    cell.style.position = "relative";
+    cell.appendChild(successIndicator);
+
+    // Remove after animation
+    setTimeout(() => {
+      if (successIndicator.parentNode) {
+        successIndicator.parentNode.removeChild(successIndicator);
+      }
+    }, 1000);
+  }
+
+  function calculateInitialTotals() {
+    totalPaidAmount = 0;
+    totalPayments = 0;
+    paidPayments = 0;
+
+    // Calculate from existing checkboxes
+    document
+      .querySelectorAll('.payment-cell input[type="checkbox"]')
+      .forEach((checkbox) => {
+        const amount = parseFloat(checkbox.dataset.amount) || 0;
+        totalPayments++;
+
+        if (checkbox.checked) {
+          totalPaidAmount += amount;
+          paidPayments++;
+        }
+      });
+
+    // Update display
+    document.getElementById("total-paid-amount").textContent =
+      totalPaidAmount.toLocaleString() + " جنيه";
+
+    const completionPercentage =
+      totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0;
+    document.getElementById("completion-percentage").textContent =
+      completionPercentage + "%";
+  }
+
+  function addNewStudent() {
+    alert("سيتم إضافة نموذج إضافة طالب جديد قريباً");
+  }
+
+  function editStudent(studentId) {
+    // Fetch student data
+    fetch(`/api/students/${studentId}/update/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showStudentModal(data.student);
+        } else {
+          alert('حدث خطأ في تحميل بيانات الطالب');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في الاتصال');
+      });
+  }
+
+  function deleteStudent(studentId, studentName) {
+    if (confirm(`هل أنت متأكد من حذف الطالب ${studentName}؟\\nسيتم حذف جميع بيانات الدفع المرتبطة بالطالب.`)) {
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      fetch(`/api/students/${studentId}/delete/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Remove student row from table
+          const studentRow = document.getElementById(`student-row-${studentId}`);
+          if (studentRow) {
+            studentRow.style.transition = 'all 0.3s ease';
+            studentRow.style.opacity = '0';
+            studentRow.style.transform = 'translateX(-100%)';
+            setTimeout(() => {
+              studentRow.remove();
+              // Recalculate totals
+              calculateInitialTotals();
+              // Update student count
+              const currentCount = parseInt(document.getElementById('total-students-count').textContent);
+              document.getElementById('total-students-count').textContent = currentCount - 1;
+            }, 300);
+          }
+          alert(data.message);
+        } else {
+          alert('حدث خطأ: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في الاتصال');
+      });
+    }
+  }
+
+  function showStudentModal(student = null) {
+    const isEdit = student !== null;
+    const modalTitle = isEdit ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد';
+    const submitText = isEdit ? 'تحديث البيانات' : 'إضافة الطالب';
+
+    const modalHTML = `
+      <div id="student-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">${modalTitle}</h3>
+          <form id="student-form">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
+                <input type="text" id="student-name" class="w-full border border-gray-300 rounded-md px-3 py-2"
+                       value="${student ? student.full_name : ''}" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">العمر</label>
+                <input type="number" id="student-age" class="w-full border border-gray-300 rounded-md px-3 py-2"
+                       value="${student ? student.age : ''}" min="10" max="25" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">رقم هاتف الأب</label>
+                <input type="text" id="student-phone" class="w-full border border-gray-300 rounded-md px-3 py-2"
+                       value="${student ? student.father_phone_number : ''}" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+                <textarea id="student-address" class="w-full border border-gray-300 rounded-md px-3 py-2"
+                          rows="3" required>${student ? student.address : ''}</textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">الصف</label>
+                <select id="student-grade" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                  <option value="">اختر الصف</option>
+                  {% for grade in all_grades %}
+                  <option value="{{ grade.id }}">${student && student.grade_id == {{ grade.id }} ? 'selected' : ''}>
+                    {{ grade.grade_name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="flex justify-end space-x-2 space-x-reverse mt-6">
+              <button type="button" onclick="closeStudentModal()"
+                      class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                إلغاء
+              </button>
+              <button type="submit"
+                      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                ${submitText}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Set selected grade if editing
+    if (student) {
+      document.getElementById('student-grade').value = student.grade_id;
+    }
+
+    // Handle form submission
+    document.getElementById('student-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      saveStudent(isEdit ? student.id : null);
+    });
+  }
+
+  function closeStudentModal() {
+    const modal = document.getElementById('student-modal');
+    if (modal) {
+      modal.remove();
+    }
+  }
+
+  function saveStudent(studentId = null) {
+    const isEdit = studentId !== null;
+    const url = isEdit ? `/api/students/${studentId}/update/` : '/api/students/add/';
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const data = {
+      full_name: document.getElementById('student-name').value,
+      age: parseInt(document.getElementById('student-age').value),
+      father_phone_number: document.getElementById('student-phone').value,
+      address: document.getElementById('student-address').value,
+      grade_id: parseInt(document.getElementById('student-grade').value)
+    };
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        closeStudentModal();
+        // Reload page to show updated data
+        window.location.reload();
+      } else {
+        alert('حدث خطأ: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('حدث خطأ في الاتصال');
+    });
+  }
+
+  function addNewStudent() {
+    showStudentModal();
+  }
+
+  // Add CSRF token to page and initialize totals
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!document.querySelector("[name=csrfmiddlewaretoken]")) {
+      const csrfInput = document.createElement("input");
+      csrfInput.type = "hidden";
+      csrfInput.name = "csrfmiddlewaretoken";
+      csrfInput.value = "{{ csrf_token }}";
+      document.body.appendChild(csrfInput);
+    }
+
+    // Calculate initial totals
+    calculateInitialTotals();
+
+    // Add CSS for animations
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: scale(0.5); }
+        50% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.5); }
+      }
+
+      .payment-cell:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .student-row:hover .payment-cell {
+        border-width: 2px;
+      }
+    `;
+    document.head.appendChild(style);
+  });
+</script>
+{% endblock %}

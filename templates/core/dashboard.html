@@ -1,0 +1,168 @@
+{% extends 'base.html' %} 
+{% load static %} 
+    {% block title %} 
+        لوحة التحكم - 
+        {{block.super }}
+    {% endblock %} 
+
+{% block content %}
+<div class="p-8">
+  <h2 class="text-3xl font-bold text-gray-800 mb-8">لوحة التحكم</h2>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">👥</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">إجمالي الطلاب</p>
+          <p class="text-2xl font-bold text-gray-900">{{ total_students }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-100 text-green-600">💰</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">إجمالي المدفوعات</p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ total_paid|floatformat:0 }} جنيه
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">⏰</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">مدفوعات معلقة</p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ total_pending|floatformat:0 }} جنيه
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md stats-card">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-purple-100 text-purple-600">📚</div>
+        <div class="mr-4">
+          <p class="text-sm font-medium text-gray-600">عدد الصفوف</p>
+          <p class="text-2xl font-bold text-gray-900">{{ total_grades }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students per Grade -->
+  <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+    <h3 class="text-xl font-bold text-gray-800 mb-6">عدد الطلاب في كل صف</h3>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {% for stat in grade_stats %}
+      <div
+        class="bg-blue-50 p-4 rounded-lg text-center border-r-4 border-blue-500 hover:shadow-md transition-shadow revenue-card {{ stat.grade__grade }}">
+        <div class="text-3xl font-bold text-blue-600">
+          {{ stat.student_count }}
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+          {% for grade in all_grades %} 
+            {% if grade.grade == stat.grade__grade%}
+                {{ grade.grade_name }}
+            {% endif %} 
+          {% endfor %}
+        </div>
+        <div class="text-xs text-gray-500 mt-1">طالب</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Monthly Revenue -->
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h3 class="text-xl font-bold text-gray-800 mb-6">
+      الإيرادات الشهرية حسب الصف
+    </h3>
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2"
+        >اختر الشهر:</label
+      >
+      <select
+        class="border border-gray-300 rounded-md px-3 py-2"
+        id="month-select"
+        onchange="updateMonthlyRevenue(this.value)">
+        <option value="august">أغسطس</option>
+        <option value="september">سبتمبر</option>
+        <option value="october">أكتوبر</option>
+        <option value="november">نوفمبر</option>
+        <option value="december">ديسمبر</option>
+        <option value="january">يناير</option>
+        <option value="february">فبراير</option>
+        <option value="march">مارس</option>
+        <option value="april" selected>أبريل</option>
+        <option value="may">مايو</option>
+        <option value="june">يونيو</option>
+      </select>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="monthly-revenue">
+      <!-- Dynamic content will be loaded here -->
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function updateMonthlyRevenue(month) {
+    const selectedGrades = Array.from(
+      document.querySelectorAll('input[name="grades"]:checked')
+    ).map((cb) => cb.value);
+
+    const params = new URLSearchParams();
+    params.append("month", month);
+    selectedGrades.forEach((grade) => params.append("grades", grade));
+
+    fetch(`{% url 'core:monthly_revenue' %}?${params.toString()}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          const container = document.getElementById("monthly-revenue");
+          container.innerHTML = "";
+
+          const gradeNames = {
+            grade7: "الأول الإعدادي",
+            grade8: "الثاني الإعدادي",
+            grade9: "الثالث الإعدادي",
+            grade10: "الأول الثانوي",
+            grade11: "الثاني الثانوي",
+            grade12: "الثالث الثانوي",
+          };
+
+          Object.keys(gradeNames).forEach((grade) => {
+            const gradeData = data.data[grade] || {
+              revenue: 0,
+              student_count: 0,
+            };
+            const div = document.createElement("div");
+            div.className = `bg-green-50 p-4 rounded-lg text-center border-r-4 border-green-500 hover:shadow-md transition-shadow revenue-card ${grade}`;
+            div.innerHTML = `
+                        <div class="text-2xl font-bold text-green-600">${gradeData.revenue.toLocaleString()} جنيه</div>
+                        <div class="text-sm text-gray-600 mt-1">${
+                          gradeNames[grade]
+                        }</div>
+                        <div class="text-xs text-gray-500 mt-1">${
+                          gradeData.student_count
+                        } طالب دافع</div>
+                    `;
+            container.appendChild(div);
+          });
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+
+  // Load initial data
+  document.addEventListener("DOMContentLoaded", function () {
+    updateMonthlyRevenue("april");
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,342 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% block title %}اختيار الصف -{{block.super }} 
+{% endblock %} 
+{% block content %}
+<div
+  class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+  <div class="max-w-4xl w-full">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div
+        class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+        <svg
+          class="w-8 h-8 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">اختيار الصف الدراسي</h1>
+      <p class="text-lg text-gray-600">
+        يرجى اختيار الصف أو الصفوف التي تريد عرض طلابها
+      </p>
+    </div>
+
+    <!-- Error Message -->
+    {% if error_message %}
+    <div
+      class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clip-rule="evenodd"></path>
+        </svg>
+        {{ error_message }}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Grade Selection Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form
+        method="GET"
+        action="{% url 'core:students_list' %}"
+        id="grade-selection-form">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <!-- All Grades Option -->
+          <div class="grade-option">
+            <input type="checkbox" id="grade-all" name="grades" value="all"
+            class="hidden grade-checkbox" {% if 'all' in selected_grades %}checked{% endif %}>
+            <label
+              for="grade-all"
+              class="grade-card cursor-pointer block p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-lg transition-all duration-300">
+              <div class="text-center">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    class="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 012-2h10a2 2 0 012 2v2M7 7h10"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                  جميع الصفوف
+                </h3>
+                <p class="text-sm text-gray-600">
+                  عرض جميع الطلاب من كافة الصفوف
+                </p>
+                <div class="mt-3 text-xs text-gray-500">
+                  {% with total_students=all_grades|length %} {{ total_students}} صف دراسي {% endwith %}
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Individual Grade Options -->
+          {% for grade in all_grades %}
+          <div class="grade-option">
+            <input
+              type="checkbox"
+              id="grade-{{ grade.grade }}"
+              name="grades"
+              value="{{ grade.grade }}"
+              class="hidden grade-checkbox"
+              {%if grade.grade in selected_grades %} checked {% endif %} />
+            <label
+              for="grade-{{ grade.grade }}"
+              class="grade-card cursor-pointer block p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-lg transition-all duration-300">
+              <div class="text-center">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span class="text-white font-bold text-lg"
+                    >{{ forloop.counter }}</span
+                  >
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                  {{ grade.grade_name }}
+                </h3>
+                <p class="text-sm text-gray-600">
+                  الرسوم الشهرية: {{ grade.monthly_fee|floatformat:0 }} جنيه
+                </p>
+                <div class="mt-3 text-xs text-gray-500">
+                  {% with student_count=grade.student_set.count %} {{ student_count }} طالب {% endwith %}
+                </div>
+              </div>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            type="submit"
+            id="submit-btn"
+            class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg
+              class="w-5 h-5 inline-block ml-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"></path>
+            </svg>
+            عرض قائمة الطلاب
+          </button>
+
+          <a
+            href="{% url 'core:dashboard' %}"
+            class="px-8 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 text-center">
+            <svg
+              class="w-5 h-5 inline-block ml-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            العودة للرئيسية
+          </a>
+        </div>
+
+        <!-- Selection Summary -->
+        <div
+          id="selection-summary"
+          class="mt-6 p-4 bg-blue-50 rounded-lg hidden">
+          <h4 class="font-semibold text-blue-800 mb-2">الصفوف المحددة:</h4>
+          <div id="selected-grades-list" class="text-blue-700"></div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-xl shadow-md text-center">
+        <div class="text-3xl font-bold text-blue-600">
+          {{ all_grades|length }}
+        </div>
+        <div class="text-gray-600">إجمالي الصفوف</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow-md text-center">
+        <div class="text-3xl font-bold text-green-600">
+          {% with total_students=0 %} 
+                {% for grade in all_grades %} 
+                    {% with total_students=total_students|add:grade.student_set.count %} 
+                    {% endwith%} 
+                {% endfor %} 
+          {{ total_students }} 
+          {% endwith %}
+        </div>
+        <div class="text-gray-600">إجمالي الطلاب</div>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow-md text-center">
+        <div class="text-3xl font-bold text-purple-600">11</div>
+        <div class="text-gray-600">الأشهر الدراسية</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const checkboxes = document.querySelectorAll(".grade-checkbox");
+    const allCheckbox = document.getElementById("grade-all");
+    const submitBtn = document.getElementById("submit-btn");
+    const selectionSummary = document.getElementById("selection-summary");
+    const selectedGradesList = document.getElementById("selected-grades-list");
+
+    // Update visual state of cards
+    function updateCardVisuals() {
+      checkboxes.forEach((checkbox) => {
+        const card = checkbox.nextElementSibling;
+        if (checkbox.checked) {
+          card.classList.add("border-blue-500", "bg-blue-50", "shadow-lg");
+          card.classList.remove("border-gray-200");
+        } else {
+          card.classList.remove("border-blue-500", "bg-blue-50", "shadow-lg");
+          card.classList.add("border-gray-200");
+        }
+      });
+
+      updateSubmitButton();
+      updateSelectionSummary();
+    }
+
+    // Update submit button state
+    function updateSubmitButton() {
+      const hasSelection = Array.from(checkboxes).some((cb) => cb.checked);
+      submitBtn.disabled = !hasSelection;
+
+      if (hasSelection) {
+        submitBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        submitBtn.classList.add("hover:bg-blue-700");
+      } else {
+        submitBtn.classList.add("opacity-50", "cursor-not-allowed");
+        submitBtn.classList.remove("hover:bg-blue-700");
+      }
+    }
+
+    // Update selection summary
+    function updateSelectionSummary() {
+      const selectedGrades = Array.from(checkboxes)
+        .filter((cb) => cb.checked)
+        .map((cb) => {
+          if (cb.value === "all") return "جميع الصفوف";
+          const label = cb.nextElementSibling.querySelector("h3");
+          return label ? label.textContent : cb.value;
+        });
+
+      if (selectedGrades.length > 0) {
+        selectedGradesList.textContent = selectedGrades.join(" • ");
+        selectionSummary.classList.remove("hidden");
+      } else {
+        selectionSummary.classList.add("hidden");
+      }
+    }
+
+    // Handle "All Grades" checkbox
+    allCheckbox.addEventListener("change", function () {
+      if (this.checked) {
+        // Uncheck all other checkboxes
+        checkboxes.forEach((cb) => {
+          if (cb !== this) cb.checked = false;
+        });
+      }
+      updateCardVisuals();
+    });
+
+    // Handle individual grade checkboxes
+    checkboxes.forEach((checkbox) => {
+      if (checkbox !== allCheckbox) {
+        checkbox.addEventListener("change", function () {
+          if (this.checked) {
+            // Uncheck "All Grades" if individual grade is selected
+            allCheckbox.checked = false;
+          }
+          updateCardVisuals();
+        });
+      }
+    });
+
+    // Initialize visual state
+    updateCardVisuals();
+
+    // Add hover effects
+    document.querySelectorAll(".grade-card").forEach((card) => {
+      card.addEventListener("mouseenter", function () {
+        if (!this.previousElementSibling.checked) {
+          this.style.transform = "translateY(-2px)";
+        }
+      });
+
+      card.addEventListener("mouseleave", function () {
+        this.style.transform = "translateY(0)";
+      });
+    });
+
+    // Form validation
+    document
+      .getElementById("grade-selection-form")
+      .addEventListener("submit", function (e) {
+        const hasSelection = Array.from(checkboxes).some((cb) => cb.checked);
+        if (!hasSelection) {
+          e.preventDefault();
+          alert("يرجى اختيار صف واحد على الأقل");
+        }
+      });
+  });
+</script>
+
+<style>
+  .grade-card {
+    transition: all 0.3s ease;
+  }
+
+  .grade-checkbox:checked + .grade-card {
+    border-color: #3b82f6 !important;
+    background-color: #eff6ff !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    transform: translateY(-2px);
+  }
+
+  .grade-checkbox:checked + .grade-card .bg-gradient-to-r {
+    background: linear-gradient(to right, #10b981, #059669) !important;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .grade-checkbox:checked + .grade-card {
+    animation: pulse 0.5s ease-in-out;
+  }
+</style>
+{% endblock %}
