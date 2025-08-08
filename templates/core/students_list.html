@@ -178,7 +178,7 @@
     </div>
 
     <!-- Quick Stats for Selected Grades -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4 space-x-reverse">
           <div class="text-center">
@@ -335,11 +335,19 @@
                   </div>
                   <div class="text-sm text-gray-500">
                     {{ data.student.grade.grade_name }}
+                    {% if data.student.is_exempt %}
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
+                        معفي
+                      </span>
+                    {% endif %}
                   </div>
                   <div class="text-xs text-gray-400 space-y-1">
                     <div>
                       <span id="student-total-{{ data.student.id }}"
                         >{{ data.total_paid|floatformat:0 }} جنيه مدفوع</span>
+                      {% if data.student.is_exempt %}
+                        <span class="text-yellow-600">(غير محتسب)</span>
+                      {% endif %}
                     </div>
                    
                   </div>
@@ -354,10 +362,11 @@
               <input
                 type="checkbox"
                 {% if data.payments|lookup:month %} checked {% endif %}
-                onchange="updatePayment({{ data.student.id }}, '{{ month }}', this.checked, {{ data.student.grade.monthly_fee }})"
+                onchange="updatePayment({{ data.student.id }}, '{{ month }}', this.checked, {{ data.student.grade.monthly_fee }}, {{ data.student.is_exempt|yesno:'true,false' }})"
                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
                 title="الدفع لشهر {{ month }}"
-                data-amount="{{ data.student.grade.monthly_fee }}" />
+                data-amount="{{ data.student.grade.monthly_fee }}"
+                data-exempt="{{ data.student.is_exempt|yesno:'true,false' }}" />
               <div class="text-xs text-gray-500 mt-1">
                 {{ data.student.grade.monthly_fee|floatformat:0 }}
               </div>
@@ -406,7 +415,7 @@
   let totalPayments = 0;
   let paidPayments = 0;
 
-  function updatePayment(studentId, month, isChecked, amount) {
+  function updatePayment(studentId, month, isChecked, amount, isExempt) {
     const csrfToken = document.querySelector(
       "[name=csrfmiddlewaretoken]"
     ).value;
@@ -435,8 +444,8 @@
           // Update cell visual state with animation
           updateCellVisuals(cell, isChecked);
 
-          // Update totals
-          updateTotals(isChecked, amount);
+          // Update totals (only if student is not exempt)
+          updateTotals(isChecked, amount, isExempt);
 
           // Update student individual total
           updateStudentTotal(studentId, isChecked, amount);
@@ -491,16 +500,22 @@
     }
   }
 
-  function updateTotals(isChecked, amount) {
+  function updateTotals(isChecked, amount, isExempt) {
     const amountValue = parseFloat(amount);
 
     if (isChecked) {
       // Payment added
-      totalPaidAmount += amountValue;
+      // Only add to total if student is not exempt
+      if (!isExempt) {
+        totalPaidAmount += amountValue;
+      }
       paidPayments++;
     } else {
       // Payment removed
-      totalPaidAmount -= amountValue;
+      // Only subtract from total if student is not exempt
+      if (!isExempt) {
+        totalPaidAmount -= amountValue;
+      }
       paidPayments--;
     }
 
@@ -508,6 +523,12 @@
     animateNumberChange(
       "total-paid-amount",
       totalPaidAmount.toLocaleString() + " جنيه"
+    );
+    
+    // Update header total paid amount
+    animateNumberChange(
+      "header-total-paid",
+      totalPaidAmount.toLocaleString()
     );
 
     // Update completion percentage
@@ -590,10 +611,14 @@
       .querySelectorAll('.payment-cell input[type="checkbox"]')
       .forEach((checkbox) => {
         const amount = parseFloat(checkbox.dataset.amount) || 0;
+        const isExempt = checkbox.dataset.exempt === 'true';
         totalPayments++;
 
         if (checkbox.checked) {
-          totalPaidAmount += amount;
+          // Only add to total if student is not exempt
+          if (!isExempt) {
+            totalPaidAmount += amount;
+          }
           paidPayments++;
         }
       });
@@ -601,10 +626,18 @@
     // Update display
     document.getElementById("total-paid-amount").textContent =
       totalPaidAmount.toLocaleString() + " جنيه";
+    
+    // Update header total paid amount
+    document.getElementById("header-total-paid").textContent =
+      totalPaidAmount.toLocaleString();
 
     const completionPercentage =
       totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0;
     document.getElementById("completion-percentage").textContent =
+      completionPercentage + "%";
+    
+    // Update header completion rate
+    document.getElementById("header-completion-rate").textContent =
       completionPercentage + "%";
   }
 

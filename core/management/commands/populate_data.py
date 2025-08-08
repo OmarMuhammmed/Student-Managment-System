@@ -34,44 +34,34 @@ class Command(BaseCommand):
             {
                 'full_name': 'أحمد محمد علي',
                 'grade': 'grade7',
-                'age': 13,
                 'father_phone_number': '01234567890',
-                'address': 'القاهرة، مصر'
             },
             {
                 'full_name': 'فاطمة أحمد حسن',
                 'grade': 'grade8',
-                'age': 14,
                 'father_phone_number': '01098765432',
-                'address': 'الجيزة، مصر'
             },
             {
                 'full_name': 'محمد عبدالله سيد',
                 'grade': 'grade9',
-                'age': 15,
                 'father_phone_number': '01123456789',
-                'address': 'الإسكندرية، مصر'
+                
             },
             {
                 'full_name': 'مريم حسام الدين',
                 'grade': 'grade10',
-                'age': 16,
                 'father_phone_number': '01187654321',
-                'address': 'القاهرة، مصر'
+                
             },
             {
                 'full_name': 'يوسف خالد محمد',
                 'grade': 'grade11',
-                'age': 17,
                 'father_phone_number': '01156789012',
-                'address': 'الجيزة، مصر'
             },
             {
                 'full_name': 'نورا سامي أحمد',
                 'grade': 'grade12',
-                'age': 18,
                 'father_phone_number': '01165432109',
-                'address': 'الإسكندرية، مصر'
             }
         ]
         
@@ -81,9 +71,7 @@ class Command(BaseCommand):
                 full_name=student_data['full_name'],
                 defaults={
                     'grade': grade,
-                    'age': student_data['age'],
                     'father_phone_number': student_data['father_phone_number'],
-                    'address': student_data['address']
                 }
             )
             if created:

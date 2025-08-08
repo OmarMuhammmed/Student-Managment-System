@@ -22,12 +22,15 @@ def dashboard(request):
     
     # Statistics
     total_students = students_qs.count()
+    
+    # Exclude exempt students from revenue calculations
+    non_exempt_students = students_qs.filter(is_exempt=False)
     total_paid = Payment.objects.filter(
-        student__in=students_qs, is_paid=True
+        student__in=non_exempt_students, is_paid=True
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     total_pending = Payment.objects.filter(
-        student__in=students_qs, is_paid=False
+        student__in=non_exempt_students, is_paid=False
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     # Grade statistics
@@ -121,8 +124,8 @@ def students_list(request):
             Q(father_phone_number__icontains=search_query)
         )
     
-    # Check if any students exist for selected grades
-    if not students_qs.exists():
+    # Check if any students exist for selected grades (only redirect if no grades selected, not for search results)
+    if not students_qs.exists() and not search_query:
         return render(request, 'core/grade_selection.html', {
             'all_grades': Grade.objects.all().order_by('grade'),
             'error_message': f'لا يوجد طلاب في الصفوف المحددة',
@@ -149,7 +152,9 @@ def students_list(request):
                 payments[month] = payment.is_paid
                 if payment.is_paid:
                     student_paid += float(payment.amount)
-                    total_paid_amount += float(payment.amount)
+                    # Only include in total if student is not exempt
+                    if not student.is_exempt:
+                        total_paid_amount += float(payment.amount)
                     paid_months += 1
             else:
                 payments[month] = False

@@ -33,6 +33,7 @@ class Student(models.Model):
     full_name = models.CharField(max_length=100, verbose_name="الاسم الكامل")
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, verbose_name="الصف")
     father_phone_number = models.CharField(max_length=20, verbose_name="رقم هاتف الأب")
+    is_exempt = models.BooleanField(default=False, verbose_name="معفي من الحسابات")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

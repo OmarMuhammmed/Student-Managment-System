@@ -11,9 +11,10 @@ class GradeAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['full_name', 'grade', 'father_phone_number']
-    list_filter = ['grade']
+    list_display = ['full_name', 'grade', 'father_phone_number', 'is_exempt']
+    list_filter = ['grade', 'is_exempt']
     search_fields = ['full_name', 'father_phone_number']
+    list_editable = ['is_exempt']
     ordering = ['full_name']
     
     fieldsets = (
@@ -22,6 +23,9 @@ class StudentAdmin(admin.ModelAdmin):
         }),
         ('معلومات الاتصال', {
             'fields': ('father_phone_number',)
+        }),
+        ('إعدادات الحساب', {
+            'fields': ('is_exempt',)
         }),
     )
 
